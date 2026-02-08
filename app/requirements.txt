@@ -1,0 +1,6 @@
+streamlit
+pymongo
+elasticsearch==7.17.0
+pandas
+matplotlib
+seaborn

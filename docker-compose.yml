@@ -1,0 +1,68 @@
+services:
+  # 1. Base de données (Stockage Persistant)
+  mongodb:
+    image: mongo:latest
+    container_name: marmiton_mongo
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+      - ./backup_data.json:/backup_data.json
+    networks:
+      - data_net
+
+  # 2. Moteur de Recherche (Bonus Spécifié)
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:7.17.10
+    container_name: marmiton_elastic
+    environment:
+      - discovery.type=single-node
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m" # Limite RAM pour laptop étudiant
+      - xpack.security.enabled=false
+    ports:
+      - "9200:9200"
+    networks:
+      - data_net
+    healthcheck:
+      test: ["CMD-SHELL", "curl --silent --fail localhost:9200/_cluster/health || exit 1"]
+      interval: 10s
+      timeout: 10s
+      retries: 10
+
+  # 3. Scraper (Bonus: Temps réel au boot)
+  scraper:
+    build: ./scraper
+    container_name: marmiton_scraper
+    depends_on:
+      mongodb:
+        condition: service_started
+      elasticsearch:
+        condition: service_healthy
+    networks:
+      - data_net
+    environment:
+      - MONGO_HOST=mongodb
+      - ELASTIC_HOST=elasticsearch
+
+  # 4. Web App (Dashboard & API like)
+  webapp:
+    build: ./app
+    container_name: marmiton_app
+    ports:
+      - "8501:8501"
+    depends_on:
+      - mongodb
+      - elasticsearch
+    networks:
+      - data_net
+    environment:
+      - MONGO_HOST=mongodb
+      - ELASTIC_HOST=elasticsearch
+
+networks:
+  data_net:
+    driver: bridge
+
+volumes:
+  mongo_data:
+    driver: local

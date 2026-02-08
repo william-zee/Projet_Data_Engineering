@@ -1,0 +1,7 @@
+selenium
+webdriver-manager
+pymongo
+elasticsearch==7.17.0
+bs4
+requests
+faker
