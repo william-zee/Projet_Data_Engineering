@@ -35,7 +35,7 @@ class MarmitonScraper:
         
         chrome_options.page_load_strategy = 'eager' 
         
-        logger.info("🚗 Initialisation du driver Chrome...")
+        logger.info("Initialisation du driver Chrome...")
         self.driver = webdriver.Chrome(options=chrome_options)
         self.driver.set_page_load_timeout(30)
         self.wait = WebDriverWait(self.driver, 10)
@@ -60,7 +60,7 @@ class MarmitonScraper:
                 logger.info(" Connexion BDD & Elastic OK")
                 return True
             except Exception as e:
-                logger.warning(f"⏳ Attente services ({i+1}/30)... {e}")
+                logger.warning(f" Attente services ({i+1}/30)... {e}")
                 time.sleep(2)
         return False
 
@@ -115,18 +115,18 @@ class MarmitonScraper:
                                 urls_to_visit.append(full)
                                 seen.add(full)
                     
-                    logger.info(f"     -> {len(urls_to_visit) - count_before} nouveaux liens trouvés.")
+                    logger.info(f"-> {len(urls_to_visit) - count_before} nouveaux liens trouvés.")
 
                 except Exception as e:
                     logger.error(f" Erreur page {page_num}: {e}")
                     continue
             
-            logger.info(f"   🎯 TOTAL liens à visiter pour {cat}: {len(urls_to_visit)}")
+            logger.info(f"TOTAL liens à visiter pour {cat}: {len(urls_to_visit)}")
 
             # --- VISITE RECETTES ---
             for url in urls_to_visit:
                 try:
-                    logger.info(f"   -> Visite : {url}")
+                    logger.info(f" Visite : {url}")
                     try:
                         self.driver.get(url)
                     except TimeoutException:
@@ -245,10 +245,10 @@ class MarmitonScraper:
 
     def save(self, data):
         if not data:
-            logger.warning("⚠️ Aucune donnée.")
+            logger.warning(" Aucune donnée.")
             return
 
-        logger.info(f"💾 Traitement de {len(data)} recettes...")
+        logger.info(f" Traitement de {len(data)} recettes...")
 
         # --- 1. SAUVEGARDE JSON (SÉCURITÉ) ---
         try:
@@ -275,7 +275,7 @@ class MarmitonScraper:
                 clean_doc['ingredients_text'] = ", ".join(d['ingredients'])
                 clean_doc['steps_text'] = " ".join(d['steps'])
                 self.es.index(index="recipes-idx", id=d['product_id'], document=clean_doc)
-            logger.info("   -> 🔎 Elasticsearch OK")
+            logger.info("  Elasticsearch OK")
         except Exception as e:
             logger.error(f"Erreur Elastic: {e}")
 
@@ -292,7 +292,7 @@ if __name__ == "__main__":
     if bot.connect():
         
         # --- ETAPE 1 : ON NETTOIE D'ABORD (MÉNAGE) ---
-        print("🧹 NETTOYAGE EN COURS (AVANT SCRAPING)...")
+        print("NETTOYAGE EN COURS (AVANT SCRAPING)...")
         
         # A. On vide MongoDB
         bot.db["recipes"].drop()
