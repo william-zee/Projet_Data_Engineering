@@ -4,6 +4,7 @@ from pymongo import MongoClient
 import os
 import pandas as pd
 
+
 # --- CONFIGURATION ---
 st.set_page_config(page_title="Marmiton Data Project", page_icon="👨‍🍳", layout="wide")
 
@@ -63,7 +64,7 @@ if page == "Dashboard & KPIs":
             if 'rating' in df.columns:
                 st.line_chart(df['rating'].value_counts())
                 
-            st.markdown("### 📋 Aperçu des Données Brutes")
+            st.markdown("###  Aperçu des Données Brutes")
             st.dataframe(df[["name", "category", "rating", "difficulty"]].head(10))
         else:
             st.info("Aucune donnée trouvée dans MongoDB pour les catégories sélectionnées.")
