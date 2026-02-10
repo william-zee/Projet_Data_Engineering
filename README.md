@@ -29,3 +29,7 @@ Ce projet remplit l'ensemble des critères et bonus demandés :
 2. **Démarrage** :
    ```bash
    docker-compose up --build
+
+Compter environ 30min pour tout rescrapper du début 
+
+Sinon lancer le script restore_data.py et relancer la page du code space aller consulter les ports actifs.
