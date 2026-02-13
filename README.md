@@ -44,16 +44,6 @@ pip install -r scrapper/requirements.txt
 ```bash
 docker-compose up --build
 ```
-
-## Features
-
-- 🔄 **Scraping automatisé** — Extraction multi-catégories via Selenium (entrées, plats, desserts)
-- 🗄️ **Double persistance** — MongoDB (stockage) + Elasticsearch (recherche full-text)
-- 🔍 **Recherche intelligente** — Fuzzy search + recherche par ingrédients disponibles
-- 📊 **Dashboard analytique** — KPIs, graphiques et exploration des données
-- 🐳 **Full Docker** — Architecture microservices prête à déployer
-- 🛡️ **Résilience** — Fallback avec données de backup si le site est inaccessible
-
 ---
 
 ##  Architecture
@@ -129,123 +119,7 @@ Visualisation des métriques clés : nombre de recettes, note moyenne, difficult
 
 Le projet expose MongoDB et Elasticsearch directement, permettant des requêtes personnalisées.
 
-#### MongoDB — Requêtes CRUD
-
-```bash
-# Connexion
-mongo mongodb://localhost:27017/marmiton_db
-```
-
-```javascript
-// Toutes les recettes
-db.recipes.find()
-
-// Filtrer par catégorie
-db.recipes.find({ category: "dessert" })
-
-// Filtrer par difficulté et note
-db.recipes.find({ difficulty: "Facile", rating: { $gte: 4.5 } })
-
-// Top 10 meilleures notes
-db.recipes.find().sort({ rating: -1 }).limit(10)
-
-// Recettes rapides (< 30 min)
-db.recipes.find({ duration_min: { $lt: 30 } })
-
-// Recherche par ingrédient (regex)
-db.recipes.find({ ingredients: { $regex: /chocolat/i } })
-
-// Compter par catégorie
-db.recipes.aggregate([
-  { $group: { _id: "$category", count: { $sum: 1 } } }
-])
-```
-
-#### Elasticsearch — Recherche Full-Text
-
-```bash
-# Health check
-curl http://localhost:9200/_cluster/health
-
-# Stats de l'index
-curl http://localhost:9200/recipes-idx/_stats
-```
-
-##### Recherche classique (multi-champs + fuzzy)
-
-```bash
-curl -X GET "localhost:9200/recipes-idx/_search" -H 'Content-Type: application/json' -d'
-{
-  "query": {
-    "multi_match": {
-      "query": "chocolat",
-      "fields": ["name", "ingredients_text", "steps_text"],
-      "fuzziness": "AUTO"
-    }
-  },
-  "size": 20
-}'
-```
-
-##### Recherche par ingrédients disponibles (mode Frigo)
-
-```bash
-curl -X GET "localhost:9200/recipes-idx/_search" -H 'Content-Type: application/json' -d'
-{
-  "query": {
-    "bool": {
-      "should": [
-        {
-          "match": {
-            "ingredients_text": {
-              "query": "oeufs",
-              "fuzziness": "AUTO"
-            }
-          }
-        },
-        {
-          "match": {
-            "ingredients_text": {
-              "query": "farine",
-              "fuzziness": "AUTO"
-            }
-          }
-        },
-        {
-          "wildcard": {
-            "ingredients_text": {
-              "value": "*lait*",
-              "case_insensitive": true
-            }
-          }
-        }
-      ],
-      "minimum_should_match": 1
-    }
-  },
-  "size": 50
-}'
-```
-
-##### Recherche avec filtres combinés
-
-```bash
-curl -X GET "localhost:9200/recipes-idx/_search" -H 'Content-Type: application/json' -d'
-{
-  "query": {
-    "bool": {
-      "must": [
-        { "match": { "name": "tarte" } }
-      ],
-      "filter": [
-        { "term": { "category": "dessert" } },
-        { "range": { "rating": { "gte": 4.0 } } },
-        { "range": { "duration_min": { "lte": 60 } } }
-      ]
-    }
-  }
-}'
-```
+---
 
 ### Champs indexés dans Elasticsearch
 
@@ -258,35 +132,6 @@ curl -X GET "localhost:9200/recipes-idx/_search" -H 'Content-Type: application/j
 | `difficulty` | keyword | ✅ Exact | Niveau de difficulté |
 | `rating` | float | ✅ Range | Note /5 |
 | `duration_min` | integer | ✅ Range | Temps en minutes |
-
-### Python — Exemples d'intégration
-
-```python
-from pymongo import MongoClient
-from elasticsearch import Elasticsearch
-
-# MongoDB
-client = MongoClient("mongodb://localhost:27017/")
-db = client["marmiton_db"]
-recipes = db["recipes"].find({"category": "plat-principal"})
-
-# Elasticsearch
-es = Elasticsearch(["http://localhost:9200"])
-result = es.search(
-    index="recipes-idx",
-    body={
-        "query": {
-            "multi_match": {
-                "query": "poulet curry",
-                "fields": ["name", "ingredients_text"],
-                "fuzziness": "AUTO"
-            }
-        }
-    }
-)
-for hit in result['hits']['hits']:
-    print(f"{hit['_source']['name']} - Score: {hit['_score']}")
-```
 
 ---
 
